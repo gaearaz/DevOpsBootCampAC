@@ -1,0 +1,45 @@
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  - name: BuildConfiguration
+    value: "release"
+
+steps:
+  - checkout: self
+
+  - task: UseDotNet@2 # Ref: https://learn.microsoft.com/en-us/azure/devops/pipelines/tasks/reference/use-dotnet-v2?view=azure-pipelines
+    displayName: Acquire .Net Version
+    inputs:
+      version: '6.x'
+      packageType: 'sdk'
+
+  - task: DotNetCoreCLI@2
+    displayName: .Net Dependencies Restore
+    inputs:
+      command: 'restore'
+      projects: '**/*.csproj'
+    
+  - task: DotNetCoreCLI@2 # https://learn.microsoft.com/en-us/azure/devops/pipelines/tasks/reference/dotnet-core-cli-v2?view=azure-pipelines
+    displayName: .Net Build
+    inputs:
+      command: 'build'
+      projects: '**/*.csproj'
+      arguments: '--configuration $(BuildConfiguration) --output $(Build.ArtifactStagingDirectory)' # Build.ArtifactStagingDirectory is a predefined variable. More info: https://learn.microsoft.com/en-us/azure/devops/pipelines/build/variables?view=azure-devops&tabs=yaml
+      
+  - task: ArchiveFiles@2
+    displayName: "Archive compiled solution"
+    inputs:
+      rootFolderOrFile: '$(Build.ArtifactStagingDirectory)' #On line 25 I specified the output path
+      includeRootFolder: false
+      archiveFile: "$(Build.StagingDirectory)/artifact.zip"
+
+  - task: AzureRmWebAppDeployment@4 # More info: https://learn.microsoft.com/en-us/azure/devops/pipelines/tasks/reference/azure-rm-web-app-deployment-v4?view=azure-pipelines
+    displayName: Deployment task example
+    inputs:
+      ConnectionType: 'AzureRM'
+      azureSubscription: 'PutAnAzureSubscriptionHere'
+      appType: 'webAppLinux'
+      WebAppName: 'ExampleApp'
+      packageForLinux: '$(Build.StagingDirectory)/artifact.zip'
+      RuntimeStack: 'DOTNETCORE|6.0'
