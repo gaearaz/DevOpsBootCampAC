@@ -27,7 +27,7 @@ steps:
       projects: '**/*.csproj'
       arguments: '--configuration $(BuildConfiguration) --output $(Build.ArtifactStagingDirectory)' # Build.ArtifactStagingDirectory is a predefined variable. More info: https://learn.microsoft.com/en-us/azure/devops/pipelines/build/variables?view=azure-devops&tabs=yaml
       
-  - task: ArchiveFiles@2
+  - task: ArchiveFiles@2 # https://learn.microsoft.com/en-us/azure/devops/pipelines/tasks/reference/archive-files-v2?view=azure-pipelines
     displayName: "Archive compiled solution"
     inputs:
       rootFolderOrFile: '$(Build.ArtifactStagingDirectory)' #On line 25 I specified the output path
